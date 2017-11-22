@@ -16,7 +16,7 @@ import { copy } from '../../publicMethod/editOperation';
  * 天气：天气预报、tq
  * 机器人：say
  */
-const COMMAND = `微打赏|wds|直播列表|zb|天气预报|tq|say|help`;
+const COMMAND: string = `微打赏|wds|直播列表|zb|天气预报|tq|say|help`;
 
 /* 判断当前的cmd是否存在，并且返回index */
 function getIndex(lists: Array, cmd: text): ?number{
@@ -47,6 +47,7 @@ const dispatch: Function = (dispatch: Function): Object=>({
 class Add extends Component{
   state: {
     customProfiles: Object[],
+    wdsProblems: Object[],
     modalDisplay: boolean,
     cmd: string,
     text: string,
@@ -60,6 +61,7 @@ class Add extends Component{
 
     this.state = {
       customProfiles: [],  // 自定义配置
+      wdsProblems: [],     // 微打赏随机问题
       modalDisplay: false, // modal显示
       cmd: '',             // 表单cmd
       text: '',            // 表单文字
@@ -73,8 +75,8 @@ class Add extends Component{
       });
     }
   }
-  // 图表配置
-  columns(): Array{
+  // 自定义命令配置
+  customProfilesColumns(): Array{
     const columns: Array = [
       {
         title: '命令',
@@ -100,6 +102,31 @@ class Add extends Component{
           return [
             <Button key={ 0 } className={ style.mr10 } size="small" onClick={ this.onEdit.bind(this, item) }>修改</Button>,
             <Popconfirm key={ 1 } title="确认要删除吗？" onConfirm={ this.onDelete.bind(this, item) }>
+              <Button size="small">删除</Button>
+            </Popconfirm>
+          ];
+        }
+      }
+    ];
+    return columns;
+  }
+  // 微打赏随机问题配置
+  wdsProblemsColumns(): Array{
+    const columns: Array = [
+      {
+        title: '命令',
+        dataIndex: 'problem',
+        key: 'problem',
+        width: '85%'
+      },
+      {
+        title: '操作',
+        key: 'handle',
+        width: '15%',
+        render: (text: string, item: Object, index: number): Array=>{
+          return [
+            <Button key={ 0 } className={ style.mr10 } size="small">修改</Button>,
+            <Popconfirm key={ 1 } title="确认要删除吗？">
               <Button size="small">删除</Button>
             </Popconfirm>
           ];
@@ -320,6 +347,28 @@ class Add extends Component{
             </div>
           </Form.Item>
         </div>
+        <h4 className={ style.title }>随机问题：</h4>
+        <Form.Item className={ style.mb15 } label="开启微打赏功能">
+          {
+            getFieldDecorator('isWdsProblems', {
+              initialValue: detail ? (detail.basic.isWdsProblems ? ['isWdsProblems'] : [] ): []
+            })(
+              <Checkbox.Group options={[
+                {
+                  label: '',
+                  value: 'isWdsProblems'
+                }
+              ]} />
+            )
+          }
+        </Form.Item>
+        <Button className={ style.addCustom } size="small">添加新自定义问题</Button>
+        <Table columns={ this.wdsProblemsColumns() }
+          dataSource={ this.state.wdsProblems }
+          size="small"
+          rowKey={ (item: Object): string=>item.id }
+        />
+        <hr className={ style.line } />
         {/* 口袋48直播监听配置 */}
         <h4 className={ style.title }>直播监听：</h4>
         <div>
@@ -500,10 +549,11 @@ class Add extends Component{
         {/* 自定义命令 */}
         <h4 className={ style.title }>自定义命令：</h4>
         <Button className={ style.addCustom } size="small" onClick={ this.onModalOpen.bind(this) }>添加新自定义命令</Button>
-        <Table columns={ this.columns() }
-               dataSource={ this.state.customProfiles }
-               size="small"
-               rowKey={ (item: Object): string=>item.command } />
+        <Table columns={ this.customProfilesColumns() }
+          dataSource={ this.state.customProfiles }
+          size="small"
+          rowKey={ (item: Object): string=>item.command }
+        />
       </Form>,
       /* 添加或修改自定义命令 */
       <Modal key={ 1 }

@@ -14,6 +14,8 @@ type interfaceOption = {
     isWds: boolean,
     wdsId: string,
     wdsTemplate: string,
+    isWdsProblems: boolean,
+    wdsProblems: Array,
     is48LiveListener: boolean,
     kd48LiveListenerMembers: string,
     isXinZhiTianQi: boolean,
@@ -37,6 +39,9 @@ function interfaceOption(value: Object, customProfiles: { command: string, text:
       wdsId: value.wdsId,
       wdsUrlTemplate: value.wdsUrlTemplate,
       wdsTemplate: value.wdsTemplate,
+      // 微打赏随机问题
+      isWdsProblems: value.isWdsProblems.length > 0,
+      wdsProblems: value.wdsProblems,
       // 口袋48监听
       is48LiveListener: value.is48LiveListener.length > 0,
       isListenerAll: value.isListenerAll.length > 0,
