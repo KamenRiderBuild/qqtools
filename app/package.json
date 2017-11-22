@@ -1,6 +1,6 @@
 {
-  "name": "qqtools",
-  "version": "0.3.4",
+  "name": "qqtools-patch-1",
+  "version": "0.3.4-patch-1",
   "description": "QQ群工具。",
   "license": "GNU General Public License v3.0",
   "scripts": {
@@ -14,7 +14,7 @@
   "main": "./build/index.html",
   "nodejs": true,
   "window": {
-    "title": "QQ群工具（v0.3.4）",
+    "title": "QQ群工具（v0.3.4-patch-1）",
     "position": "center",
     "toolbar": true,
     "frame": true,
@@ -28,6 +28,7 @@
     "email": "duanhaochen@126.com",
     "url": "https://github.com/duan602728596"
   },
+
   "dependencies": {
     "cheerio": "^1.0.0-rc.2"
   },
