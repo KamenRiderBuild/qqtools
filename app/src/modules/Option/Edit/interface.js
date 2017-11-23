@@ -15,6 +15,7 @@ type interfaceOption = {
     wdsId: string,
     wdsTemplate: string,
     isWdsProblems: boolean,
+    wdsProblemTemplate: string,
     wdsProblems: Array,
     is48LiveListener: boolean,
     kd48LiveListenerMembers: string,
@@ -27,7 +28,11 @@ type interfaceOption = {
   custom: Object
 };
 
-function interfaceOption(value: Object, customProfiles: { command: string, text: string }[]): interfaceOption{
+function interfaceOption(
+  value: Object,
+  customProfiles: { command: string, text: string }[],
+  wdsProblems: { id: number, problem: string }[]
+): interfaceOption{
   const custom: Object = customProfilesArray2Obj(customProfiles);
   const inter: interfaceOption = {
     name: value.name,
@@ -41,7 +46,8 @@ function interfaceOption(value: Object, customProfiles: { command: string, text:
       wdsTemplate: value.wdsTemplate,
       // 微打赏随机问题
       isWdsProblems: value.isWdsProblems.length > 0,
-      wdsProblems: value.wdsProblems,
+      wdsProblemTemplate: value.wdsProblemTemplate,
+      wdsProblems: wdsProblems,
       // 口袋48监听
       is48LiveListener: value.is48LiveListener.length > 0,
       isListenerAll: value.isListenerAll.length > 0,

@@ -31,6 +31,18 @@ function getIndex(lists: Array, cmd: text): ?number{
   return index;
 }
 
+/* 根据id查找index */
+function getIndexInId(lists: Array, id: number): ?number{
+  let index: number = null;
+  for(let i: number = 0, j: number = lists.length; i < j; i++){
+    if(lists[i].id === id){
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
 /* 初始化数据 */
 const state: Function = createStructuredSelector({});
 
@@ -54,6 +66,12 @@ class Add extends Component{
     item: ?{
       command: string,
       text: string
+    },
+    problemDisplay: boolean,
+    problem: string,
+    problemItem: ?{
+      id: number,
+      problem: string
     }
   };
   constructor(props: Object): void{
@@ -65,13 +83,17 @@ class Add extends Component{
       modalDisplay: false, // modal显示
       cmd: '',             // 表单cmd
       text: '',            // 表单文字
-      item: null           // 被选中
+      item: null,          // 被选中
+      problemDisplay: false, // modal显示
+      problem: '',           // 问题
+      problemItem: null      // 被选中
     };
   }
   componentDidMount(): void{
     if('query' in this.props.location){
       this.setState({
-        customProfiles: customProfilesObj2Array(this.props.location.query.detail.custom)
+        customProfiles: customProfilesObj2Array(this.props.location.query.detail.custom),
+        wdsProblems: this.props.location.query.detail.basic.wdsProblems
       });
     }
   }
@@ -125,8 +147,8 @@ class Add extends Component{
         width: '15%',
         render: (text: string, item: Object, index: number): Array=>{
           return [
-            <Button key={ 0 } className={ style.mr10 } size="small">修改</Button>,
-            <Popconfirm key={ 1 } title="确认要删除吗？">
+            <Button key={ 0 } className={ style.mr10 } size="small" onClick={ this.onEditProblem.bind(this, item) }>修改</Button>,
+            <Popconfirm key={ 1 } title="确认要删除吗？" onConfirm={ this.onDeleteProblem.bind(this, item) }>
               <Button size="small">删除</Button>
             </Popconfirm>
           ];
@@ -136,19 +158,19 @@ class Add extends Component{
     return columns;
   }
   // 表单的change事件
-  onInputChange(key: string, event: Object): void{
+  onInputChange(key: string, event: Event): void{
     this.setState({
       [key]: event.target.value
     });
   }
   // modal显示
-  onModalOpen(event: Object): void{
+  onModalOpen(key: string, event: Event): void{
     this.setState({
-      modalDisplay: true
+      [key]: true
     });
   }
   // modal关闭事件
-  onModalClose(event: Object): void{
+  onModalClose(event: Event): void{
     this.setState({
       modalDisplay: false,
       cmd: '',
@@ -157,7 +179,7 @@ class Add extends Component{
     });
   }
   // 添加
-  onAdd(event: Object): void{
+  onAdd(event: Event): void{
     if(getIndex(this.state.customProfiles, this.state.cmd) === null){
       this.state.customProfiles.push({
         command: this.state.cmd,
@@ -174,7 +196,7 @@ class Add extends Component{
     }
   }
   // 编辑
-  onEdit(item: Object, event: Object): void{
+  onEdit(item: Object, event: Event): void{
     this.setState({
       modalDisplay: true,
       cmd: item.command,
@@ -183,7 +205,7 @@ class Add extends Component{
     });
   }
   // 保存编辑
-  onSave(){
+  onSave(event: Event): void{
     if(getIndex(this.state.customProfiles, this.state.cmd) === null || this.state.cmd === this.state.item.command){
       const index: number = getIndex(this.state.customProfiles, this.state.item.command);
       this.state.customProfiles[index] = {
@@ -201,19 +223,67 @@ class Add extends Component{
     }
   }
   // 删除
-  onDelete(item: Object, event: Object): void{
+  onDelete(item: Object, event: Event): void{
     const index: number = getIndex(this.state.customProfiles, item.command);
     this.state.customProfiles.splice(index, 1);
     this.setState({
       customProfiles: this.state.customProfiles
     });
   }
+  // 添加自定义问题
+  onAddProblem(event: Event): void{
+    this.state.wdsProblems.push({
+      id: new Date().getTime(),
+      problem: this.state.problem
+    });
+    this.setState({
+      problemDisplay: false,
+      wdsProblems: this.state.wdsProblems,
+      problem: ''
+    });
+  }
+  // 编辑
+  onEditProblem(item: Object, event: Event): void{
+    this.setState({
+      problemDisplay: true,
+      problem: item.problem,
+      problemItem: item
+    });
+  }
+  // 保存编辑
+  onSaveProblem(){
+    const index: number = getIndexInId(this.state.wdsProblems, this.state.problemItem.id);
+    this.state.wdsProblems[index] = {
+      problem: this.state.problem
+    };
+    this.setState({
+      problemDisplay: false,
+      wdsProblems: this.state.wdsProblems,
+      problem: ''
+    });
+  }
+  // 删除
+  onDeleteProblem(item: Object, event: Event): void{
+    const index: number = getIndex(this.state.wdsProblems, item.id);
+    this.state.wdsProblems.splice(index, 1);
+    this.setState({
+      wdsProblems: this.state.wdsProblems
+    });
+  }
+  // modal关闭事件
+  onProblemModalClose(event: Event): void{
+    this.setState({
+      problemDisplay: false,
+      problem: '',
+      problemItem: null
+    });
+  }
   // 提交
-  onSubmit(event: Object): void{
+  onSubmit(event: Event): void{
     event.preventDefault();
     this.props.form.validateFields(async (err: any, value: Object): void=>{
       if(!err){
-        const data: Object = interfaceOption(value, this.state.customProfiles);
+        const data: Object = interfaceOption(value, this.state.customProfiles, this.state.wdsProblems);
         await this.props.action.putOption({
           data
         });
@@ -348,7 +418,7 @@ class Add extends Component{
           </Form.Item>
         </div>
         <h4 className={ style.title }>随机问题：</h4>
-        <Form.Item className={ style.mb15 } label="开启微打赏功能">
+        <Form.Item className={ style.mb15 } label="随机问题功能">
           {
             getFieldDecorator('isWdsProblems', {
               initialValue: detail ? (detail.basic.isWdsProblems ? ['isWdsProblems'] : [] ): []
@@ -362,7 +432,33 @@ class Add extends Component{
             )
           }
         </Form.Item>
-        <Button className={ style.addCustom } size="small">添加新自定义问题</Button>
+        <br />
+        <Form.Item label="抽题信息模板">
+          <div className="clearfix">
+            {
+              getFieldDecorator('wdsProblemTemplate', {
+                initialValue: detail ? detail.basic.wdsProblemTemplate :
+                  `@{{ id }} 抽到问题 {{ problem }}`
+              })(
+                <Input.TextArea className={ style.template } rows={ 15 } />
+              )
+            }
+            <p className={ style.shuoming }>
+              <b>模板关键字：</b>
+              <br />
+              id：打赏人的ID，
+              <br />
+              problem：抽到的问题
+            </p>
+          </div>
+        </Form.Item>
+        <br />
+        <Button className={ `${ style.mt15 } ${ style.addCustom }` }
+          size="small"
+          onClick={ this.onModalOpen.bind(this, 'problemDisplay') }
+        >
+          添加新自定义问题
+        </Button>
         <Table columns={ this.wdsProblemsColumns() }
           dataSource={ this.state.wdsProblems }
           size="small"
@@ -548,7 +644,7 @@ class Add extends Component{
         <hr className={ style.line } />
         {/* 自定义命令 */}
         <h4 className={ style.title }>自定义命令：</h4>
-        <Button className={ style.addCustom } size="small" onClick={ this.onModalOpen.bind(this) }>添加新自定义命令</Button>
+        <Button className={ style.addCustom } size="small" onClick={ this.onModalOpen.bind(this, 'modalDisplay') }>添加新自定义命令</Button>
         <Table columns={ this.customProfilesColumns() }
           dataSource={ this.state.customProfiles }
           size="small"
@@ -557,7 +653,7 @@ class Add extends Component{
       </Form>,
       /* 添加或修改自定义命令 */
       <Modal key={ 1 }
-        title={ this.state.item ? "修改" : "添加" + "自定义命令" }
+        title={ this.state.item ? '修改' : '添加' + '自定义命令' }
         visible={ this.state.modalDisplay }
         width="500px"
         maskClosable={ false }
@@ -578,6 +674,25 @@ class Add extends Component{
             rows={ 15 }
             value={ this.state.text }
             onChange={ this.onInputChange.bind(this, 'text') }
+          />
+        </div>
+      </Modal>,
+      /* 添加自定义问题 */
+      <Modal key={ 2 }
+        title={ this.state.problemItem ? '修改' : '添加' + '问题' }
+        visible={ this.state.problemDisplay }
+        width="500px"
+        maskClosable={ false }
+        onOk={ this.state.problemItem ? this.onSaveProblem.bind(this) : this.onAddProblem.bind(this) }
+        onCancel={ this.onProblemModalClose.bind(this) }
+      >
+        <div className={ style.customProfiles }>
+          <label className={ style.customLine } htmlFor="problem">问题：</label>
+          <Input.TextArea className={ style.customLine }
+            id="problem"
+            rows={ 15 }
+            value={ this.state.problem }
+            onChange={ this.onInputChange.bind(this, 'problem') }
           />
         </div>
       </Modal>

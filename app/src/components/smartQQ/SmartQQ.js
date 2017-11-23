@@ -361,20 +361,51 @@ class SmartQQ{
   // web worker监听到微打赏的返回信息
   async workerWds(event: Event): void{
     if(event.data.type === 'change'){
-      const { data } = event.data;
+      const { data }: { data: Array } = event.data;
+      const { wdsProblems, isWdsProblems, wdsProblemTemplate, wdsTemplate }: {
+        wdsProblems: Array,
+        isWdsProblems: boolean,
+        wdsProblemTemplate: string,
+        wdsTemplate: string
+      } = this.option.basic;
+      const len: number = wdsProblems.length;
+
       // 倒序发送消息
-      for(let i = data.length - 1; i >= 0; i--){
-        const item: Object = data[i];
-        const msg: string = templateReplace(this.option.basic.wdsTemplate, {
-          id: item.nickname,
-          money: item.pay_amount,
-          amount: item.allMount,
-          ranking: item.newIndex + 1,
-          rankingchage: item.promote,
-          wdsname: this.wdsTitle,
-          wdsid: this.option.basic.wdsId
-        });
-        await this.sendFormatMessage(msg);
+      // 判断是否开启微打赏问题
+      // 这样写是为了考虑性能问题
+      if(isWdsProblems && len !== 0){
+        for(let i: number = data.length - 1; i >= 0; i--){
+          const item: Object = data[i];
+          const msg: string = templateReplace(wdsTemplate, {
+            id: item.nickname,
+            money: item.pay_amount,
+            amount: item.allMount,
+            ranking: item.newIndex + 1,
+            rankingchage: item.promote,
+            wdsname: this.wdsTitle,
+            wdsid: this.option.basic.wdsId
+          });
+          const pl: string = templateReplace(wdsProblemTemplate, {
+            id: item.nickname,
+            problem: wdsProblems[Math.floor(Math.random() * len)]
+          });
+          await this.sendFormatMessage(msg);
+          await this.sendFormatMessage(pl);
+        }
+      }else{
+        for(let i: number = data.length - 1; i >= 0; i--){
+          const item: Object = data[i];
+          const msg: string = templateReplace(wdsTemplate, {
+            id: item.nickname,
+            money: item.pay_amount,
+            amount: item.allMount,
+            ranking: item.newIndex + 1,
+            rankingchage: item.promote,
+            wdsname: this.wdsTitle,
+            wdsid: this.option.basic.wdsId
+          });
+          await this.sendFormatMessage(msg);
+        }
       }
     }
   }
