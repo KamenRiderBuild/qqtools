@@ -387,7 +387,7 @@ class SmartQQ{
           });
           const pl: string = templateReplace(wdsProblemTemplate, {
             id: item.nickname,
-            problem: wdsProblems[Math.floor(Math.random() * len)]
+            problem: wdsProblems[Math.floor(Math.random() * len)].problem
           });
           await this.sendFormatMessage(msg);
           await this.sendFormatMessage(pl);
